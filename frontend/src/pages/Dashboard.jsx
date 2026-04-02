@@ -230,9 +230,9 @@ export default function Dashboard({ user }) {
 
             <div style={{ flex: 2 }}>
               <h3 style={{ color: "#aaa", fontSize: 14, marginBottom: 10 }}>
-                Recent Trades
+                Recent Trades & My Orders
               </h3>
-              <TradeTable />
+              <TradeTable userId={activeUser?.investor_id} />
             </div>
           </div>
         </>

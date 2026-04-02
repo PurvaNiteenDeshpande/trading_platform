@@ -42,6 +42,7 @@ export const api = {
       body: JSON.stringify(order),
     }),
   getOrders: (investorId) => request(`/orders/${investorId}`),
+  getOrderBook: (stockId) => request(`/orders/book/${stockId}`),
 
   // Portfolio
   getPortfolio: (investorId) => request(`/portfolio/${investorId}`),
