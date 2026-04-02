@@ -67,12 +67,14 @@ FROM (
 JOIN stocks s ON s.symbol = p.symbol;
 
 -- 5) Preload every investor with 20 shares of every stock.
-INSERT INTO holdings (portfolio_id, stock_id, stock_quantity)
+INSERT IGNORE INTO holdings (portfolio_id, stock_id, stock_quantity)
 SELECT p.portfolio_id, s.stock_id, 20
 FROM portfolio p
 CROSS JOIN stocks s
-ON DUPLICATE KEY UPDATE
-  stock_quantity = GREATEST(holdings.stock_quantity, 20);
+;
+
+UPDATE holdings
+SET stock_quantity = GREATEST(stock_quantity, 20);
 
 -- 6) Demo OPEN orders so Orders page is not empty
 INSERT INTO orders (investor_id, stock_id, order_type, order_quantity, order_price, order_status)

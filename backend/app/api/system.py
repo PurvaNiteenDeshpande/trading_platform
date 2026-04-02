@@ -82,8 +82,6 @@ def reset_trading_state(
             SELECT p.portfolio_id, s.stock_id, 20
             FROM portfolio p
             CROSS JOIN stocks s
-            ON DUPLICATE KEY UPDATE
-              stock_quantity = 20
             """
         )
 
