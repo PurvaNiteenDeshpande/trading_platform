@@ -1,3 +1,9 @@
+import os
+import sys
+
+# Add the project root to sys.path so 'backend.app...' imports work on Vercel
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api import orders, stocks, trades, portfolio, investors
