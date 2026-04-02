@@ -33,14 +33,12 @@ CREATE TABLE orders (
     stock_id INT NOT NULL,
     order_type VARCHAR(4) NOT NULL CHECK (order_type IN ('BUY', 'SELL')),
     order_quantity INT NOT NULL CHECK (order_quantity > 0),
-    executed_quantity INT NOT NULL DEFAULT 0 
-    CHECK (executed_quantity >= 0 AND executed_quantity <= order_quantity),
+    executed_quantity INT NOT NULL DEFAULT 0 CHECK (executed_quantity >= 0 AND executed_quantity <= order_quantity),
     order_price DECIMAL(10,2) NOT NULL CHECK (order_price > 0),
-    order_status VARCHAR(20) DEFAULT 'OPEN',
+    order_status VARCHAR(20) DEFAULT 'OPEN' CHECK (order_status IN ('OPEN', 'PARTIAL', 'FILLED', 'CANCELLED')),
     order_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (investor_id) REFERENCES investors(investor_id) ON DELETE CASCADE,
-    FOREIGN KEY (stock_id) REFERENCES stocks(stock_id),
-    CHECK (order_status IN ('OPEN', 'PARTIAL', 'FILLED', 'CANCELLED'))
+    FOREIGN KEY (stock_id) REFERENCES stocks(stock_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE trades (
