@@ -94,21 +94,6 @@ export default function Navbar({ setUser, user }) {
       </span>
 
       <button
-        onClick={() => setShowAccount((prev) => !prev)}
-        style={{
-          background: showAccount ? "#00b36b" : "transparent",
-          color: "white",
-          border: "1px solid #333",
-          padding: "8px 14px",
-          borderRadius: 6,
-          cursor: "pointer",
-          fontSize: 14,
-        }}
-      >
-        Account
-      </button>
-
-      <button
         onClick={logout}
         style={{
           marginLeft: "auto", background: "transparent", color: "#ff4d4d",
