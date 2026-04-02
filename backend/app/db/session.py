@@ -9,6 +9,5 @@ def get_connection():
         database=os.getenv("DB_NAME", "trading_db"),
         port=int(os.getenv("DB_PORT", "3306")),
         autocommit=False,
-        ssl_verify_cert=True,
-        ssl_verify_identity=True
+        ssl_disabled=False
     )

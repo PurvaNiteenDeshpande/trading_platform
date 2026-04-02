@@ -41,19 +41,22 @@ def get_investor(investor_id: int):
 @router.get("/{investor_id}/login")
 def login(investor_id: int):
     # Extremely simplified authentication matching frontend's logic
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT investor_id, name, email, account_balance
-        FROM investors
-        WHERE investor_id = %s
-    """, (investor_id,))
-    data = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    if not data:
-        raise HTTPException(status_code=404, detail="Investor not found")
-    return {"message": "Login successful", "investor": data}
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT investor_id, name, email, account_balance
+            FROM investors
+            WHERE investor_id = %s
+        """, (investor_id,))
+        data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if not data:
+            raise HTTPException(status_code=404, detail="Investor not found")
+        return {"message": "Login successful", "investor": data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database Connection Error: {str(e)}")
 
 @router.post("/")
 def create_investor(investor: InvestorCreateSchema):
