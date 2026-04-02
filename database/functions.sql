@@ -1,6 +1,6 @@
 DELIMITER $$
 
--- Get latest price for a stock
+
 CREATE FUNCTION get_latest_price(p_stock_id INT)
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
@@ -15,7 +15,7 @@ BEGIN
     RETURN COALESCE(latest, 0.00);
 END$$
 
--- Get total holdings value for a portfolio
+
 CREATE FUNCTION get_portfolio_value(p_investor_id INT)
 RETURNS DECIMAL(15,2)
 DETERMINISTIC
