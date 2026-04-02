@@ -14,6 +14,10 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/[...path].py"
+    },
+    {
       "handle": "filesystem"
     },
     {
