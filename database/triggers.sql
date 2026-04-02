@@ -1,6 +1,5 @@
 DELIMITER $$
 
--- Auto-create portfolio when a new investor is inserted
 CREATE TRIGGER after_investor_insert
 AFTER INSERT ON investors
 FOR EACH ROW
@@ -8,7 +7,7 @@ BEGIN
     INSERT IGNORE INTO portfolio (investor_id) VALUES (NEW.investor_id);
 END$$
 
--- Prevent selling more shares than held
+
 CREATE TRIGGER before_order_insert
 BEFORE INSERT ON orders
 FOR EACH ROW
@@ -29,7 +28,7 @@ BEGIN
     END IF;
 END$$
 
--- Prevent buying if balance is insufficient
+
 CREATE TRIGGER before_order_insert_balance
 BEFORE INSERT ON orders
 FOR EACH ROW
