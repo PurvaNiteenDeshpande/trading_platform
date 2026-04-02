@@ -5,6 +5,14 @@ AFTER INSERT ON investors
 FOR EACH ROW
 BEGIN
     INSERT IGNORE INTO portfolio (investor_id) VALUES (NEW.investor_id);
+
+    INSERT INTO holdings (portfolio_id, stock_id, stock_quantity)
+    SELECT p.portfolio_id, s.stock_id, 20
+    FROM portfolio p
+    CROSS JOIN stocks s
+    WHERE p.investor_id = NEW.investor_id
+    ON DUPLICATE KEY UPDATE
+      stock_quantity = GREATEST(holdings.stock_quantity, 20);
 END$$
 
 

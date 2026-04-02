@@ -85,6 +85,17 @@ def create_investor(investor: InvestorCreateSchema):
             VALUES (%s)
         """, (investor_id,))
 
+        # Preload each new account with 20 shares of every listed stock.
+        cursor.execute("""
+            INSERT INTO holdings (portfolio_id, stock_id, stock_quantity)
+            SELECT p.portfolio_id, s.stock_id, 20
+            FROM portfolio p
+            CROSS JOIN stocks s
+            WHERE p.investor_id = %s
+            ON DUPLICATE KEY UPDATE
+              stock_quantity = GREATEST(holdings.stock_quantity, 20)
+        """, (investor_id,))
+
         cursor.execute(
             """
             SELECT investor_id, name, email, account_balance

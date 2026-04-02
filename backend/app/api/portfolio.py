@@ -86,7 +86,7 @@ def _get_holdings_breakdown(cursor, investor_id: int):
 
         total_buy_qty = float(row["total_buy_qty"] or 0)
         total_buy_value = float(row["total_buy_value"] or 0)
-        avg_buy_price = (total_buy_value / total_buy_qty) if total_buy_qty > 0 else 0.0
+        avg_buy_price = (total_buy_value / total_buy_qty) if total_buy_qty > 0 else current_price
 
         market_value = quantity * current_price
         cost_basis = quantity * avg_buy_price
