@@ -10,7 +10,9 @@ router = APIRouter()
 
 def _check_bootstrap_auth(token: str | None):
     required_token = os.getenv("BOOTSTRAP_TOKEN")
-    if required_token and token != required_token:
+    if not required_token:
+        raise HTTPException(status_code=503, detail="BOOTSTRAP_TOKEN is not configured")
+    if token != required_token:
         raise HTTPException(status_code=403, detail="Invalid bootstrap token")
 
 
