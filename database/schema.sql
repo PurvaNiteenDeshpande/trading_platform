@@ -31,31 +31,31 @@ CREATE TABLE orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
     investor_id INT NOT NULL,
     stock_id INT NOT NULL,
-    order_type VARCHAR(4) NOT NULL CHECK (order_type IN ('BUY', 'SELL')),
-    order_quantity INT NOT NULL CHECK (order_quantity > 0),
-    executed_quantity INT NOT NULL DEFAULT 0 CHECK (executed_quantity >= 0 AND executed_quantity <= order_quantity),
-    order_price DECIMAL(10,2) NOT NULL CHECK (order_price > 0),
-    order_status VARCHAR(20) DEFAULT 'OPEN' CHECK (order_status IN ('OPEN', 'PARTIAL', 'FILLED', 'CANCELLED')),
+    order_type VARCHAR(4) NOT NULL,
+    order_quantity INT NOT NULL,
+    executed_quantity INT NOT NULL DEFAULT 0,
+    order_price DECIMAL(10,2) NOT NULL,
+    order_status VARCHAR(20) DEFAULT 'OPEN',
     order_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     FOREIGN KEY (investor_id) REFERENCES investors(investor_id) ON DELETE CASCADE,
     FOREIGN KEY (stock_id) REFERENCES stocks(stock_id)
 ) ENGINE=InnoDB;
+
 
 CREATE TABLE trades (
     trade_id INT AUTO_INCREMENT PRIMARY KEY,
     stock_id INT NOT NULL,
     buy_order_id INT NOT NULL,
     sell_order_id INT NOT NULL,
-    trade_price DECIMAL(10,2) NOT NULL CHECK (trade_price > 0),
-    trade_quantity INT NOT NULL CHECK (trade_quantity > 0),
+    trade_price DECIMAL(10,2) NOT NULL,
+    trade_quantity INT NOT NULL,
     trade_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     FOREIGN KEY (buy_order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
     FOREIGN KEY (sell_order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
-    FOREIGN KEY (stock_id) REFERENCES stocks(stock_id),
-
-    CHECK (buy_order_id <> sell_order_id)
+    FOREIGN KEY (stock_id) REFERENCES stocks(stock_id)
 ) ENGINE=InnoDB;
-
 
 CREATE TABLE holdings (
     id INT AUTO_INCREMENT PRIMARY KEY,
