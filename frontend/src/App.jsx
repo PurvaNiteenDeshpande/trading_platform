@@ -11,20 +11,24 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    try {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (err) {
+      localStorage.removeItem("user");
     }
   }, []);
 
   return (
     <BrowserRouter>
-      {user && <Navbar setUser={setUser} />}
+      {user && <Navbar setUser={setUser} user={user} />}
       <div style={{ padding: "20px" }}>
         <Routes>
           <Route
             path="/"
-            element={user ? <Dashboard /> : <Navigate to="/login" />}
+            element={user ? <Dashboard user={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/login"
@@ -32,11 +36,11 @@ function App() {
           />
           <Route
             path="/orders"
-            element={user ? <Orders /> : <Navigate to="/login" />}
+            element={user ? <Orders user={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/portfolio"
-            element={user ? <Portfolio /> : <Navigate to="/login" />}
+            element={user ? <Portfolio user={user} /> : <Navigate to="/login" />}
           />
         </Routes>
       </div>

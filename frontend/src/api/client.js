@@ -33,6 +33,7 @@ async function request(url, options = {}) {
 export const api = {
   // Stocks
   getStocks: () => request("/stocks"),
+  getStockHistory: (stockId, points = 30) => request(`/stocks/${stockId}/history?points=${points}`),
 
   // Orders
   placeOrder: (order) =>
@@ -44,6 +45,7 @@ export const api = {
 
   // Portfolio
   getPortfolio: (investorId) => request(`/portfolio/${investorId}`),
+  getPortfolioSummary: (investorId) => request(`/portfolio/${investorId}/summary`),
 
   // Trades
   getTrades: () => request("/trades"),

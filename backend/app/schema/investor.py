@@ -7,7 +7,7 @@ class InvestorCreateSchema(BaseModel):
     name: str
     email: EmailStr
     phone: Optional[str] = None
-    account_balance: Decimal = Decimal("0.00")
+    account_balance: Decimal = Decimal("100000.00")
 
     @field_validator("name")
     @classmethod

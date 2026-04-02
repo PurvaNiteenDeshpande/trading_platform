@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from backend.app.db.session import get_connection
 from backend.app.schema.investor import InvestorCreateSchema
 from mysql.connector.errors import IntegrityError
+from decimal import Decimal
 
 router = APIRouter()
 
@@ -68,23 +69,41 @@ def login(investor_id: int):
 @router.post("/")
 def create_investor(investor: InvestorCreateSchema):
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
+        initial_wallet_cash = Decimal("100000.00")
+
         cursor.execute("""
             INSERT INTO investors (name, email, phone, account_balance)
             VALUES (%s, %s, %s, %s)
-        """, (investor.name, investor.email, investor.phone, investor.account_balance))
+        """, (investor.name, investor.email, investor.phone, initial_wallet_cash))
         investor_id = cursor.lastrowid
         
-        # Also create initial portfolio
+        # Create portfolio row if trigger is not installed.
         cursor.execute("""
-            INSERT INTO portfolio (investor_id)
+            INSERT IGNORE INTO portfolio (investor_id)
             VALUES (%s)
         """, (investor_id,))
+
+        cursor.execute(
+            """
+            SELECT investor_id, name, email, account_balance
+            FROM investors
+            WHERE investor_id = %s
+            """,
+            (investor_id,),
+        )
+        created = cursor.fetchone()
         
         conn.commit()
-        return {"investor_id": investor_id, "message": "Profile created successfully"}
-    except IntegrityError as e:
+        return {
+            "message": "Account created successfully",
+            "investor_id": investor_id,
+            "investor": created,
+            "user": created,
+            "token": f"investor-{investor_id}"
+        }
+    except IntegrityError:
         conn.rollback()
         raise HTTPException(status_code=400, detail="Email already exists or invalid data")
     except Exception as e:
