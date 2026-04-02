@@ -14,7 +14,12 @@ export default function Login({ setUser }) {
 
     const res = await login(Number(investorId));
 
-    if (res.token) {
+    if (res?.investor) {
+      const user = res.investor;
+      localStorage.setItem("token", `investor-${user.investor_id}`);
+      localStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
+    } else if (res?.token && res?.user) {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
       setUser(res.user);
