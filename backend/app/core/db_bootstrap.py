@@ -102,14 +102,8 @@ def bootstrap_database() -> Dict:
 
         conn.commit()
 
-        cursor.execute(
-            """
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = DATABASE()
-            """
-        )
-        existing_tables = {row["table_name"] for row in cursor.fetchall()}
+        cursor.execute("SHOW TABLES")
+        existing_tables = {next(iter(row.values())) for row in cursor.fetchall() if row}
 
         return {
             "message": "Bootstrap completed",
