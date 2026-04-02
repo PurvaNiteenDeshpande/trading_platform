@@ -1,7 +1,7 @@
 import yfinance as yf
 import mysql.connector
 
-# ✅ CONNECT
+
 conn = mysql.connector.connect(
     host="127.0.0.1",
     user="root",
@@ -11,7 +11,7 @@ conn = mysql.connector.connect(
 
 cursor = conn.cursor()
 
-# ✅ STOCKS
+
 stocks = [
     ("RELIANCE.NS", "Reliance"),
     ("TCS.NS", "TCS"),
@@ -22,7 +22,7 @@ stocks = [
     ("LT.NS", "L&T")
 ]
 
-# ✅ INSERT STOCKS
+
 for symbol, name in stocks:
     cursor.execute("""
         INSERT IGNORE INTO stocks (symbol, company_name)
@@ -31,13 +31,13 @@ for symbol, name in stocks:
 
 conn.commit()
 
-# ✅ CREATE SYMBOL → ID MAP
+
 cursor.execute("SELECT stock_id, symbol FROM stocks")
 rows = cursor.fetchall()
 
 symbol_to_id = {symbol: stock_id for stock_id, symbol in rows}
 
-# ✅ FETCH & INSERT PRICES
+
 for symbol, _ in stocks:
     print(f"Fetching {symbol}...")
 
@@ -60,7 +60,7 @@ for symbol, _ in stocks:
             index.to_pydatetime()
         ))
 
-# ✅ COMMIT
+
 conn.commit()
 
 print("✅ Data inserted successfully!")
