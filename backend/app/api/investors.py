@@ -55,6 +55,8 @@ def login(investor_id: int):
         if not data:
             raise HTTPException(status_code=404, detail="Investor not found")
         return {"message": "Login successful", "investor": data}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database Connection Error: {str(e)}")
 
