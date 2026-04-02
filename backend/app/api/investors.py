@@ -54,7 +54,12 @@ def login(investor_id: int):
         conn.close()
         if not data:
             raise HTTPException(status_code=404, detail="Investor not found")
-        return {"message": "Login successful", "investor": data}
+        return {
+            "message": "Login successful",
+            "investor": data,
+            "user": data,
+            "token": f"investor-{data['investor_id']}"
+        }
     except HTTPException:
         raise
     except Exception as e:
