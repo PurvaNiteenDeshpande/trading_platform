@@ -36,7 +36,7 @@ for (inv_id,) in investor_ids:
 
 conn.commit()
 
-print(f"✅ Seeded {len(investors)} investors + portfolios")
+print(f"Seeded {len(investors)} investors + portfolios")
 
 cursor.close()
 conn.close()
