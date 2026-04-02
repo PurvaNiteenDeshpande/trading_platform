@@ -104,7 +104,10 @@ export default function Dashboard({ user }) {
     });
 
     if (res?.order_id) {
-      setMessage({ type: "success", text: `${orderType} order #${res.order_id} placed.` });
+      const tradeText = res.matched
+        ? ` Matched in ${res.trades_created} trade${res.trades_created > 1 ? "s" : ""}.`
+        : " Waiting in order book.";
+      setMessage({ type: "success", text: `${orderType} order #${res.order_id} placed.${tradeText}` });
       loadStocks();
 
       api.getInvestor(activeUser.investor_id).then((data) => {

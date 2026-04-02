@@ -3,7 +3,28 @@ from backend.app.db.session import get_connection
 
 def get_portfolio(cursor, investor_id):
     cursor.execute("SELECT portfolio_id FROM portfolio WHERE investor_id=%s", (investor_id,))
-    return cursor.fetchone()[0]
+    row = cursor.fetchone()
+    if not row:
+        raise ValueError(f"Portfolio not found for investor_id={investor_id}")
+
+    if isinstance(row, dict):
+        return row.get("portfolio_id")
+    return row[0]
+
+
+def update_order_status(cursor, order_id):
+    cursor.execute(
+        """
+        UPDATE orders
+        SET order_status = CASE
+            WHEN executed_quantity >= order_quantity THEN 'FILLED'
+            WHEN executed_quantity > 0 THEN 'PARTIAL'
+            ELSE 'OPEN'
+        END
+        WHERE order_id=%s
+        """,
+        (order_id,),
+    )
 
 
 def update_balance(cursor, investor_id, amount):
@@ -23,12 +44,21 @@ def update_holding(cursor, portfolio_id, stock_id, qty):
     row = cursor.fetchone()
 
     if row:
+        current_qty = row["stock_quantity"] if isinstance(row, dict) else row[0]
+        new_qty = current_qty + qty
+
+        if new_qty < 0:
+            raise ValueError("Insufficient holdings to settle trade")
+
         cursor.execute("""
             UPDATE holdings
             SET stock_quantity = stock_quantity + %s
             WHERE portfolio_id=%s AND stock_id=%s
         """, (qty, portfolio_id, stock_id))
     else:
+        if qty < 0:
+            raise ValueError("Cannot reduce holdings below zero")
+
         cursor.execute("""
             INSERT INTO holdings (portfolio_id, stock_id, stock_quantity)
             VALUES (%s, %s, %s)
@@ -38,17 +68,19 @@ def update_holding(cursor, portfolio_id, stock_id, qty):
 def match_order(order_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    trades_created = 0
 
     try:
         cursor.execute("SELECT * FROM orders WHERE order_id=%s", (order_id,))
         order = cursor.fetchone()
 
+        if not order:
+            return {"trades_created": 0}
+
         remaining = order["order_quantity"] - order["executed_quantity"]
 
         if remaining <= 0:
-            return
-
-        buyer_portfolio = get_portfolio(cursor, order["investor_id"])
+            return {"trades_created": 0}
 
         if order["order_type"] == "BUY":
             cursor.execute("""
@@ -75,11 +107,28 @@ def match_order(order_id):
             if remaining <= 0:
                 break
 
-            m_remaining = m["order_quantity"] - m["executed_quantity"]
-            trade_qty = min(remaining, m_remaining)
-            trade_value = trade_qty * m["order_price"]
+            # Avoid self matching the same investor's opposite order.
+            if m["investor_id"] == order["investor_id"]:
+                continue
 
-            seller_portfolio = get_portfolio(cursor, m["investor_id"])
+            m_remaining = m["order_quantity"] - m["executed_quantity"]
+            if m_remaining <= 0:
+                continue
+
+            trade_qty = min(remaining, m_remaining)
+
+            if order["order_type"] == "BUY":
+                buy_order = order
+                sell_order = m
+            else:
+                buy_order = m
+                sell_order = order
+
+            buy_portfolio = get_portfolio(cursor, buy_order["investor_id"])
+            sell_portfolio = get_portfolio(cursor, sell_order["investor_id"])
+
+            trade_price = float(sell_order["order_price"])
+            trade_value = trade_qty * trade_price
 
             cursor.execute("""
                 INSERT INTO trades
@@ -87,24 +136,19 @@ def match_order(order_id):
                 VALUES (%s,%s,%s,%s,%s)
             """, (
                 order["stock_id"],
-                order["order_id"] if order["order_type"]=="BUY" else m["order_id"],
-                m["order_id"] if order["order_type"]=="BUY" else order["order_id"],
-                m["order_price"],
+                buy_order["order_id"],
+                sell_order["order_id"],
+                trade_price,
                 trade_qty
             ))
 
-            if order["order_type"] == "BUY":
-                update_balance(cursor, order["investor_id"], -trade_value)
-                update_balance(cursor, m["investor_id"], trade_value)
+            trades_created += 1
 
-                update_holding(cursor, buyer_portfolio, order["stock_id"], trade_qty)
-                update_holding(cursor, seller_portfolio, order["stock_id"], -trade_qty)
-            else:
-                update_balance(cursor, order["investor_id"], trade_value)
-                update_balance(cursor, m["investor_id"], -trade_value)
+            update_balance(cursor, buy_order["investor_id"], -trade_value)
+            update_balance(cursor, sell_order["investor_id"], trade_value)
 
-                update_holding(cursor, seller_portfolio, order["stock_id"], -trade_qty)
-                update_holding(cursor, buyer_portfolio, order["stock_id"], trade_qty)
+            update_holding(cursor, buy_portfolio, order["stock_id"], trade_qty)
+            update_holding(cursor, sell_portfolio, order["stock_id"], -trade_qty)
 
             cursor.execute("""
                 UPDATE orders
@@ -118,23 +162,19 @@ def match_order(order_id):
                 WHERE order_id=%s
             """, (trade_qty, m["order_id"]))
 
+            update_order_status(cursor, order["order_id"])
+            update_order_status(cursor, m["order_id"])
+
             remaining -= trade_qty
 
-        cursor.execute("""
-            UPDATE orders
-            SET order_status =
-            CASE
-                WHEN executed_quantity = order_quantity THEN 'FILLED'
-                ELSE 'PARTIAL'
-            END
-            WHERE order_id=%s
-        """, (order_id,))
+        update_order_status(cursor, order_id)
 
         conn.commit()
+        return {"trades_created": trades_created}
 
     except Exception as e:
         conn.rollback()
-        print("MATCH ERROR:", e)
+        raise
 
     finally:
         cursor.close()

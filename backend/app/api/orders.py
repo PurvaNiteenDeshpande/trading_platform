@@ -139,9 +139,15 @@ def place_order(order: OrderSchema):
         order_id = cursor.lastrowid
         conn.commit()
 
-        match_order(order_id)
+        match_result = match_order(order_id)
+        trades_created = int((match_result or {}).get("trades_created", 0))
 
-        return {"order_id": order_id, "status": "Order placed and matched"}
+        return {
+            "order_id": order_id,
+            "status": "Order placed",
+            "trades_created": trades_created,
+            "matched": trades_created > 0,
+        }
 
     except Exception as e:
         conn.rollback()
