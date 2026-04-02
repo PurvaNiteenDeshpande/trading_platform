@@ -10,7 +10,14 @@ async function request(url, options = {}) {
       ...options,
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      if (!res.ok) throw new Error(text.substring(0, 80));
+      throw new Error("Failed to parse JSON response");
+    }
 
     if (!res.ok) {
       throw new Error(data.detail || data.error || "API Error");
