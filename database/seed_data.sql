@@ -4,10 +4,11 @@ INSERT INTO investors (name, email, phone, account_balance) VALUES
 ('Alice Smith', 'alice@invest.com', '555-1234', 100000.00),
 ('Bob Jones', 'bob@invest.com', '555-5678', 100000.00),
 ('Charlie Brown', 'charlie@invest.com', '555-9012', 100000.00)
+AS new_inv
 ON DUPLICATE KEY UPDATE
-  name = VALUES(name),
-  phone = VALUES(phone),
-  account_balance = VALUES(account_balance);
+  name = new_inv.name,
+  phone = new_inv.phone,
+  account_balance = new_inv.account_balance;
 
 -- 2) Ensure each investor has a portfolio (covers cases where trigger was added later)
 INSERT IGNORE INTO portfolio (investor_id)
@@ -20,8 +21,9 @@ INSERT INTO stocks (symbol, company_name) VALUES
 ('MSFT', 'Microsoft Corporation'),
 ('TSLA', 'Tesla, Inc.'),
 ('AMZN', 'Amazon.com, Inc.')
+AS new_stk
 ON DUPLICATE KEY UPDATE
-  company_name = VALUES(company_name);
+  company_name = new_stk.company_name;
 
 -- 4) Multi-day price history rows (for charts + daily gain/loss)
 INSERT INTO stock_prices (stock_id, price, volume, recorded_at)
@@ -72,7 +74,7 @@ JOIN portfolio p ON p.investor_id = i.investor_id
 JOIN stocks s ON s.symbol = 'AAPL'
 WHERE i.email = 'alice@invest.com'
 ON DUPLICATE KEY UPDATE
-  stock_quantity = GREATEST(holdings.stock_quantity, VALUES(stock_quantity));
+  stock_quantity = GREATEST(holdings.stock_quantity, 100);
 
 INSERT INTO holdings (portfolio_id, stock_id, stock_quantity)
 SELECT p.portfolio_id, s.stock_id, 50
@@ -81,7 +83,7 @@ JOIN portfolio p ON p.investor_id = i.investor_id
 JOIN stocks s ON s.symbol = 'TSLA'
 WHERE i.email = 'bob@invest.com'
 ON DUPLICATE KEY UPDATE
-  stock_quantity = GREATEST(holdings.stock_quantity, VALUES(stock_quantity));
+  stock_quantity = GREATEST(holdings.stock_quantity, 50);
 
 -- 6) Demo OPEN orders so Orders page is not empty
 INSERT INTO orders (investor_id, stock_id, order_type, order_quantity, order_price, order_status)
