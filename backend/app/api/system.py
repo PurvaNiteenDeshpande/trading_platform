@@ -49,3 +49,65 @@ def bootstrap_status():
     finally:
         cursor.close()
         conn.close()
+
+
+@router.post("/reset-trading-state")
+def reset_trading_state(
+    x_bootstrap_token: str | None = Header(default=None),
+    reset_wallet: bool = True,
+):
+    _check_bootstrap_auth(x_bootstrap_token)
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("SELECT COUNT(*) AS total FROM investors")
+        investor_count = int(cursor.fetchone()["total"])
+
+        cursor.execute("DELETE FROM trades")
+        trades_deleted = cursor.rowcount
+
+        cursor.execute("DELETE FROM orders")
+        orders_deleted = cursor.rowcount
+
+        cursor.execute("DELETE FROM holdings")
+        holdings_deleted = cursor.rowcount
+
+        cursor.execute("INSERT IGNORE INTO portfolio (investor_id) SELECT investor_id FROM investors")
+
+        cursor.execute(
+            """
+            INSERT INTO holdings (portfolio_id, stock_id, stock_quantity)
+            SELECT p.portfolio_id, s.stock_id, 20
+            FROM portfolio p
+            CROSS JOIN stocks s
+            ON DUPLICATE KEY UPDATE
+              stock_quantity = 20
+            """
+        )
+
+        if reset_wallet:
+            cursor.execute("UPDATE investors SET account_balance = 100000.00")
+
+        cursor.execute("SELECT COUNT(*) AS total FROM holdings")
+        holdings_after_reset = int(cursor.fetchone()["total"])
+
+        conn.commit()
+
+        return {
+            "message": "Trading state reset successfully",
+            "investor_count": investor_count,
+            "trades_deleted": trades_deleted,
+            "orders_deleted": orders_deleted,
+            "holdings_deleted": holdings_deleted,
+            "holdings_after_reset": holdings_after_reset,
+            "wallet_reset_applied": reset_wallet,
+            "shares_per_stock_per_user": 20,
+        }
+    except Exception as exc:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Reset failed: {str(exc)}")
+    finally:
+        cursor.close()
+        conn.close()

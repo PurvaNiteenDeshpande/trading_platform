@@ -57,6 +57,34 @@ export default function Navbar({ setUser, user }) {
         📈 TradePlatform
       </span>
 
+      <div style={styles.accountWrap}>
+        <button
+          onClick={() => setShowAccount((prev) => !prev)}
+          style={{
+            background: showAccount ? "#00b36b" : "transparent",
+            color: "white",
+            border: "1px solid #333",
+            padding: "8px 14px",
+            borderRadius: 6,
+            cursor: "pointer",
+            fontSize: 14,
+          }}
+        >
+          Account
+        </button>
+
+        {showAccount && (
+          <div style={styles.panel}>
+            <div style={styles.title}>Account Details</div>
+            <div style={styles.row}><span>Investor ID</span><strong>{account?.investor_id ?? "-"}</strong></div>
+            <div style={styles.row}><span>Name</span><strong>{account?.name || "-"}</strong></div>
+            <div style={styles.row}><span>Email</span><strong>{account?.email || "-"}</strong></div>
+            <div style={styles.row}><span>Wallet Cash</span><strong>₹{Number(account?.account_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></div>
+            <button onClick={refreshAccount} style={styles.refreshBtn}>Refresh Details</button>
+          </div>
+        )}
+      </div>
+
       <button style={navStyle("/")} onClick={() => navigate("/")}>Dashboard</button>
       <button style={navStyle("/orders")} onClick={() => navigate("/orders")}>Orders</button>
       <button style={navStyle("/portfolio")} onClick={() => navigate("/portfolio")}>Portfolio</button>
@@ -90,26 +118,18 @@ export default function Navbar({ setUser, user }) {
       >
         Logout
       </button>
-
-      {showAccount && (
-        <div style={styles.panel}>
-          <div style={styles.title}>Account Details</div>
-          <div style={styles.row}><span>Investor ID</span><strong>{account?.investor_id ?? "-"}</strong></div>
-          <div style={styles.row}><span>Name</span><strong>{account?.name || "-"}</strong></div>
-          <div style={styles.row}><span>Email</span><strong>{account?.email || "-"}</strong></div>
-          <div style={styles.row}><span>Wallet Cash</span><strong>₹{Number(account?.account_balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></div>
-          <button onClick={refreshAccount} style={styles.refreshBtn}>Refresh Details</button>
-        </div>
-      )}
     </div>
   );
 }
 
 const styles = {
+  accountWrap: {
+    position: "relative",
+  },
   panel: {
     position: "absolute",
-    right: 24,
-    top: 58,
+    left: 0,
+    top: 42,
     width: 300,
     background: "#1a1a1a",
     border: "1px solid #2a2a2a",
