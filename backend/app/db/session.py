@@ -1,10 +1,12 @@
 import mysql.connector
+import os
 
 def get_connection():
     return mysql.connector.connect(
-        host="127.0.0.1",
-        user="root",
-        password="YOUR_PASSWORD",
-        database="trading_db",
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", "YOUR_PASSWORD"),
+        database=os.getenv("DB_NAME", "trading_db"),
+        port=int(os.getenv("DB_PORT", "3306")),
         autocommit=False
     )
